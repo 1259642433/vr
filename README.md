@@ -1,5 +1,8 @@
 # vue-init
 
+#### 介绍
+vue初始模板
+
 ## Project setup
 ```
 npm install
