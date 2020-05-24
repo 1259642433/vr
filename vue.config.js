@@ -7,7 +7,7 @@ module.exports = {
   devServer: {
     open: true,
     openPage: '',
-    host: 'localhost',
+    // host: '',
     port: 8080,
     https: false,
     proxy: null, // 设置代理
