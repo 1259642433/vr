@@ -180,7 +180,7 @@ export default {
     display: block;
     margin: 40px auto;
     width: 100vw;
-    height: auto;
+    height: calc(100vw / 16 * 9);
     line-height: 0;
   }
   .func{
