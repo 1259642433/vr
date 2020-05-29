@@ -5,7 +5,7 @@
       <button @click="player.play()">播放</button>
       <button @click="player.pause()">暂停</button>
     </div>
-    <video class="video-js" ref="video"></video>
+    <!-- <video class="video-js" ref="video"></video> -->
   </div>
 </template>
 
@@ -177,15 +177,15 @@ export default {
   width:100%;
   height: 100%;
   #container{
-    display: block;
-    margin: 40px auto;
     width: 100vw;
     height: calc(100vw / 16 * 9);
     line-height: 0;
   }
   .func{
-    margin: 0 auto;
-    width: 800px;
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    width: 100vw;
     button{
       margin-right: 20px;
       padding: 10px 15px;
