@@ -64,6 +64,7 @@ export default {
       // http://live.xshaitt.com/kxh/demo.m3u8
       // http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
       // this.getNormalVideo('./video/video_1.mp4', this.video)
+      this.video.poster = 'https://images.pexels.com/photos/3518091/pexels-photo-3518091.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
       this.getHLS('http://live.xshaitt.com/kxh/demo.m3u8', this.video)
       // this.getRTMP('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
       // this.getFLV('rtmp://202.69.69.180:443/webcast/bshdlive-pc', this.video)

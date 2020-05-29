@@ -11,8 +11,8 @@
 
 <script>
 import videojs from 'video.js'
-import 'videojs-flash'
 
+import 'videojs-flash'
 require('./js/videojs-vr')
 export default {
   name: 'VRLive',
@@ -26,7 +26,7 @@ export default {
           type: 'application/x-mpegURL',
           // http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
           // http://live.xshaitt.com/kxh/demo.m3u8
-          src: ' http://live.xshaitt.com/kxh/demo.m3u8'
+          src: ' http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8'
         }, {
           withCredentials: false,
           type: 'rtmp/flv',
