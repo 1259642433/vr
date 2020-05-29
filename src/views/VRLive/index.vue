@@ -11,10 +11,6 @@
 
 <script>
 import * as THREE from 'three'
-// import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
-
-// import videojs from 'video.js'
-// import 'videojs-flash'
 export default {
   name: 'VRLive',
   data () {
@@ -65,7 +61,7 @@ export default {
       // http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
       // this.getNormalVideo('./video/video_1.mp4', this.video)
       this.video.poster = 'https://images.pexels.com/photos/3518091/pexels-photo-3518091.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
-      this.getHLS('http://live.xshaitt.com/kxh/demo.m3u8', this.video)
+      this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
       // this.getRTMP('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
       // this.getFLV('rtmp://202.69.69.180:443/webcast/bshdlive-pc', this.video)
       // this.video.play()
@@ -128,7 +124,7 @@ export default {
     //   })
     // },
     getFLV (sourceURL, el) {
-      const flv = require('./js/flv')
+      const flv = require('flv.js')
       if (flv.isSupported()) {
         var flvPlayer = flv.createPlayer({
           type: 'rtmp/flv',
@@ -136,6 +132,7 @@ export default {
         })
         flvPlayer.attachMediaElement(el)
         flvPlayer.load()
+        this.player = flvPlayer
       }
     },
     addMouseEvent (el) {
@@ -182,8 +179,8 @@ export default {
   #container{
     display: block;
     margin: 40px auto;
-    width: 800px;
-    height: 600px;
+    width: 100vw;
+    height: auto;
     line-height: 0;
   }
   .func{
