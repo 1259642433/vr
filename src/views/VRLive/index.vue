@@ -1,11 +1,32 @@
 <template>
   <div class="vrlive">
-    <div id="container"></div>
-    <div class="func">
-      <button @click="player.play()">播放</button>
-      <button @click="player.pause()">暂停</button>
+    <div class="vr-video">
+      <div id="videoContainer">
+      </div>
+      <div class="statistics">
+        <p>status：{{playVariables.status}}</p>
+      </div>
+      <div class="func">
+        <div v-if="playVariables.status == 'pause'" @click="player.play()"  class="btns-play">
+          <i class="iconfont icon-icon_play"></i>
+        </div>
+        <div v-else-if="playVariables.status == 'playing'" @click="player.pause()"  class="btns-pause">
+          <i class="iconfont icon-ai07"></i>
+        </div>
+        <div v-else-if="playVariables.status == 'loading'" class="loading">
+          <div class="border"></div>
+          <div class="slow"></div>
+          <div class="fast"></div>
+        </div>
+      </div>
     </div>
-    <!-- <video class="video-js" ref="video"></video> -->
+    <div class="playType">
+      <button @click="getNormalVideo('http://www.wangwentehappy.tk/static/video/1.mp4', video)">普通视频</button>
+      <button @click="getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', video)">hls</button>
+      <button>rtmp</button>
+      <button>flv</button>
+    </div>
+    <video src="http://144.34.165.131:12577/static/file/storageArea/1.mp4" controls></video>
   </div>
 </template>
 
@@ -21,7 +42,17 @@ export default {
       mesh: null,
       video: null,
       hls: null,
-      player: null
+      player: null,
+      playVariables: {
+        type: '',
+        status: 'pause'
+      }
+    }
+  },
+  watch: {
+    'playVariables.status' () {
+      // console.log(this.playVariables.status)
+      // console.log(this.video)
     }
   },
   mounted () {
@@ -29,7 +60,7 @@ export default {
   },
   methods: {
     init () {
-      const container = document.getElementById('container')
+      const container = document.getElementById('videoContainer')
       this.initScene()
       this.initCamera(container)
       this.initRenderer(container)
@@ -53,18 +84,30 @@ export default {
     },
     initVideo () {
       this.video = document.createElement('video')
-      // this.video.muted = true
-      // this.video.autoplay = true
-      // this.video.loop = true
-      // 在此处判断视频类型
+      this.video.preload = 'auto'
+      this.video.crossOrigin = 'anonymous'
+      const self = this
+      this.video.addEventListener('waiting', function (event) {
+        self.playVariables.status = 'loading'
+      })
+      this.video.addEventListener('playing', function (event) {
+        self.playVariables.status = 'playing'
+      })
+      this.video.addEventListener('pause', function (event) {
+        self.playVariables.status = 'pause'
+      })
+      this.video.addEventListener('canplay', function (event) {
+        if (self.playVariables.status === 'loading') {
+          self.playVariables.status = 'playing'
+        }
+      })
+      // 判断视频类型
       // http://live.xshaitt.com/kxh/demo.m3u8
       // http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
-      // this.getNormalVideo('./video/video_1.mp4', this.video)
-      this.video.poster = 'https://images.pexels.com/photos/3518091/pexels-photo-3518091.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500'
-      this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
+      this.getNormalVideo('https://www.wangwentehappy.tk/static/video/1.mp4', this.video)
+      // this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
       // this.getRTMP('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
       // this.getFLV('rtmp://202.69.69.180:443/webcast/bshdlive-pc', this.video)
-      // this.video.play()
     },
     initContent () {
       this.initVideo()
@@ -82,15 +125,10 @@ export default {
       requestAnimationFrame(this.render)
       this.renderer.render(this.scene, this.camera)
     },
-    onWindowResize (el) {
-      this.camera.aspect = el.clientWidth / el.clientHeight
-      this.camera.updateProjectionMatrix()
-      this.renderer.setSize(el.clientWidth, el.clientHeight)
-    },
     getNormalVideo (sourceURL, el) {
-      el.crossOrigin = 'Anonymous'
       const source = document.createElement('source')
       source.src = sourceURL
+      source.type = 'video/mp4'
       el.appendChild(source)
       this.player = el
     },
@@ -135,8 +173,13 @@ export default {
         this.player = flvPlayer
       }
     },
+    onWindowResize (el) {
+      this.camera.aspect = el.clientWidth / el.clientHeight
+      this.camera.updateProjectionMatrix()
+      this.renderer.setSize(el.clientWidth, el.clientHeight)
+    },
     addMouseEvent (el) {
-      // 1
+      // TODO 对接鼠标移动事件
       const pre = {
         x: '',
         y: ''
@@ -159,9 +202,9 @@ export default {
           console.log(pre)
           console.log(self.camera)
           if (event.movementY && !event.movementX) {
-            self.camera.rotation.x -= event.movementY / 1000
+            self.camera.rotation.x -= event.movementY / 500
           } else if (!event.movementY && event.movementX) {
-            self.camera.rotation.y += event.movementX / 1000
+            self.camera.rotation.y += event.movementX / 500
           } else { pre.x = event.clientX }
           pre.y = event.clientY
         }
@@ -173,15 +216,112 @@ export default {
 
 <style lang="scss" scoped>
 .vrlive{
-  display: inline-block;
-  width:100%;
-  height: 100%;
-  #container{
-    width: 100vw;
+
+  .vr-video{
+    position: relative;
+    margin: auto;
+    #videoContainer{
     height: calc(100vw / 16 * 9);
     line-height: 0;
+    }
+    .func{
+      position: absolute;
+      z-index: 2;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%,-50%);
+      height: 50px;
+      font-size: 16px;
+      .loading{
+        position: relative;
+        border-radius: 50%;
+        width: 3em;
+        height: 3em;
+        .border{
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border: 0.45em solid rgba(99, 149, 168, 0.5);
+          border-radius: 50%;
+        }
+        .slow{
+          position: absolute;
+          z-index: 2;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border-width: 0.45em;
+          border-style: solid;
+          border: 0.45em solid rgba(0, 0, 0, 0);
+          border-top-color: rgb(7, 186, 241);
+          animation: slow 1.5s linear infinite;
+          border-radius: 50%;
+        }
+        .fast{
+          position: absolute;
+          z-index: 1;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          border-width: 0.45em;
+          border-style: solid;
+          border: 0.45em solid rgba(0, 0, 0, 0);
+          border-top-color: rgb(10, 126, 161);
+          animation: fast 0.75s linear infinite;
+          border-radius: 50%;
+        }
+        @keyframes slow {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        @keyframes fast {
+          0% {
+            transform: rotate(0deg);
+          }
+          25% {
+            transform: rotate(45deg);
+          }
+          75% {
+            transform: rotate(315deg);
+          }
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+      }
+
+      .btns-play,.btns-pause{
+        i{
+          font-size: 4em;
+          color: rgba(255,255,255,1);
+          transition: color .3s;
+        }
+        &:hover{
+          cursor: pointer;
+          i{
+            color: rgba(255,255,255,0.6);
+          }
+        }
+      }
+    }
+    .statistics{
+      position: absolute;
+      z-index: 1;
+      top: 1em;
+      left: 1em;
+      padding: 0.2em 1em;
+      font-size: 13px;
+      color: white;
+      background-color: rgba(0,0,0,0.4);
+      border-radius: 0.2em;
+    }
   }
-  .func{
+  .playType{
     display: flex;
     justify-content: center;
     margin-top: 30px;
@@ -200,6 +340,10 @@ export default {
         box-shadow: 0 2px 5px #40bad5;
       }
     }
+  }
+  video{
+    margin-top: 20px;
+    width: 100%;
   }
 }
 </style>
