@@ -21,7 +21,7 @@
       </div>
     </div>
     <div class="playType">
-      <button @click="getNormalVideo('http://www.wangwentehappy.tk/static/video/1.mp4', video)">普通视频</button>
+      <button @click="getNormalVideo('http://www.wangwentehappy.tk/static/video/2.mp4', video)">普通视频</button>
       <button @click="getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', video)">hls</button>
       <button>rtmp</button>
       <button>flv</button>
@@ -32,6 +32,10 @@
 
 <script>
 import * as THREE from 'three'
+// const OrbitControls = require('three/examples/js/controls/OrbitControls')
+import threeOrbitControls from 'three-orbit-controls'
+const OrbitControls = threeOrbitControls(THREE)
+
 export default {
   name: 'VRLive',
   data () {
@@ -41,18 +45,29 @@ export default {
       renderer: null,
       mesh: null,
       video: null,
+      controls: null,
       hls: null,
       player: null,
       playVariables: {
-        type: '',
-        status: 'pause'
+        type: '', // 视频类型
+        // 播放状态，与视频播放状态对应
+        /*
+        loading:加载中,
+        playing:视频播放中,包括视频中间加载后继续播放
+        pause:暂停或用户未点开始按钮
+        */
+        status: 'pause',
+        controls: false // 控件显示状态
       }
     }
   },
   watch: {
-    'playVariables.status' () {
+    playVariables (val) {
       // console.log(this.playVariables.status)
       // console.log(this.video)
+      if (val.status === 'pause') {
+
+      }
     }
   },
   mounted () {
@@ -65,8 +80,10 @@ export default {
       this.initCamera(container)
       this.initRenderer(container)
       this.initContent()
+      this.initControls(container)
       this.render()
-      this.addMouseEvent(container)
+      console.log(this.controls)
+      // this.addMouseEvent(container)
       window.addEventListener('resize', this.onWindowResize(container))
     },
     initScene () {
@@ -74,8 +91,7 @@ export default {
     },
     initCamera (el) {
       this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 1, 1100)
-      this.camera.position.set(0, 0, 0)
-      // this.camera.rotation.x = 0
+      this.camera.position.set(1, 0, 0)
     },
     initRenderer (el) {
       this.renderer = new THREE.WebGLRenderer()
@@ -104,7 +120,7 @@ export default {
       // 判断视频类型
       // http://live.xshaitt.com/kxh/demo.m3u8
       // http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
-      this.getNormalVideo('https://www.wangwentehappy.tk/static/video/1.mp4', this.video)
+      this.getNormalVideo('https://www.wangwentehappy.tk/static/video/2.mp4', this.video)
       // this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
       // this.getRTMP('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
       // this.getFLV('rtmp://202.69.69.180:443/webcast/bshdlive-pc', this.video)
@@ -121,8 +137,15 @@ export default {
       this.mesh.position.set(0, 0, 0)
       this.scene.add(this.mesh)
     },
+    initControls (el) {
+      this.controls = new OrbitControls(this.camera, el)
+      this.controls.rotateSpeed = 0.05
+      this.controls.enableDamping = true
+      this.controls.dampingFactor = 0.05
+    },
     render () {
       requestAnimationFrame(this.render)
+      this.controls.update()
       this.renderer.render(this.scene, this.camera)
     },
     getNormalVideo (sourceURL, el) {
