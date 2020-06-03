@@ -7,10 +7,10 @@
         <p>status：{{playVariables.status}}</p>
       </div>
       <div class="func">
-        <div v-if="playVariables.status == 'pause'" @click="player.play()"  class="btns-play">
+        <div v-if="playVariables.status == 'pause'" @click="player.play()" class="btns-play">
           <i class="iconfont icon-icon_play"></i>
         </div>
-        <div v-else-if="playVariables.status == 'playing'" @click="player.pause()"  class="btns-pause">
+        <div v-else-if="playVariables.status == 'playing'" @click="player.pause()" class="btns-pause">
           <i class="iconfont icon-ai07"></i>
         </div>
         <div v-else-if="playVariables.status == 'loading'" class="loading">
@@ -26,7 +26,21 @@
       <button>rtmp</button>
       <button>flv</button>
     </div>
-    <video src="http://144.34.165.131:12577/static/file/storageArea/1.mp4" controls></video>
+    <div class="orientation">
+      <p>
+        陀螺仪数据:
+      </p>
+      <p>
+        alpha(z轴):{{deviceOrientationData.beta||'请用手机查看参数'}}
+      </p>
+      <p>
+        beta(x轴):{{deviceOrientationData.beta||'请用手机查看参数'}}
+      </p>
+      <p>
+        gamma(y轴):{{deviceOrientationData.gamma||'请用手机查看参数'}}
+      </p>
+    </div>
+    <video src="http://144.34.165.131:12577/static/file/storageArea/1.mp4" preload="auto" controls></video>
   </div>
 </template>
 
@@ -46,15 +60,16 @@ export default {
       mesh: null,
       video: null,
       controls: null,
+      deviceOrientationData: {},
       hls: null,
       player: null,
       playVariables: {
         type: '', // 视频类型
         // 播放状态，与视频播放状态对应
         /*
-        loading:加载中,
-        playing:视频播放中,包括视频中间加载后继续播放
-        pause:暂停或用户未点开始按钮
+          loading:加载中,
+          playing:视频播放中,包括视频中间加载后继续播放
+          pause:暂停或用户未点开始按钮
         */
         status: 'pause',
         controls: false // 控件显示状态
@@ -82,9 +97,11 @@ export default {
       this.initContent()
       this.initControls(container)
       this.render()
-      console.log(this.controls)
       // this.addMouseEvent(container)
-      window.addEventListener('resize', this.onWindowResize(container))
+      window.addEventListener('deviceorientation', function (event) {
+        this.deviceOrientationData = event
+      }.bind(this), false)
+      window.addEventListener('resize', this.onWindowResize(container), false)
     },
     initScene () {
       this.scene = new THREE.Scene()
@@ -102,21 +119,20 @@ export default {
       this.video = document.createElement('video')
       this.video.preload = 'auto'
       this.video.crossOrigin = 'anonymous'
-      const self = this
       this.video.addEventListener('waiting', function (event) {
-        self.playVariables.status = 'loading'
-      })
+        this.playVariables.status = 'loading'
+      }.bind(this))
       this.video.addEventListener('playing', function (event) {
-        self.playVariables.status = 'playing'
-      })
+        this.playVariables.status = 'playing'
+      }.bind(this))
       this.video.addEventListener('pause', function (event) {
-        self.playVariables.status = 'pause'
-      })
+        this.playVariables.status = 'pause'
+      }.bind(this))
       this.video.addEventListener('canplay', function (event) {
-        if (self.playVariables.status === 'loading') {
-          self.playVariables.status = 'playing'
+        if (this.playVariables.status === 'loading') {
+          this.playVariables.status = 'playing'
         }
-      })
+      }.bind(this))
       // 判断视频类型
       // http://live.xshaitt.com/kxh/demo.m3u8
       // http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
@@ -132,7 +148,9 @@ export default {
       var texture = new THREE.VideoTexture(this.video)
       texture.minFilter = THREE.LinearFilter
       texture.format = THREE.RGBFormat
-      var material = new THREE.MeshBasicMaterial({ map: texture })
+      var material = new THREE.MeshBasicMaterial({
+        map: texture
+      })
       this.mesh = new THREE.Mesh(geometry, material)
       this.mesh.position.set(0, 0, 0)
       this.scene.add(this.mesh)
@@ -171,7 +189,8 @@ export default {
       this.player = el
     },
     // 废弃
-    // canvas?非原生video标签
+    // 非原生video标签。
+    // confuse canvas?
     // getRTMP (sourceURL, el) {
     //   el.id = 'rtmpVideo'
     //   console.log(el)
@@ -184,6 +203,7 @@ export default {
     //     console.log('准备就绪')
     //   })
     // },
+    //  TODO 等待对接测试
     getFLV (sourceURL, el) {
       const flv = require('flv.js')
       if (flv.isSupported()) {
@@ -201,8 +221,8 @@ export default {
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(el.clientWidth, el.clientHeight)
     },
+    // TODO 对接鼠标移动事件
     addMouseEvent (el) {
-      // TODO 对接鼠标移动事件
       const pre = {
         x: '',
         y: ''
@@ -228,145 +248,174 @@ export default {
             self.camera.rotation.x -= event.movementY / 500
           } else if (!event.movementY && event.movementX) {
             self.camera.rotation.y += event.movementX / 500
-          } else { pre.x = event.clientX }
+          } else {
+            pre.x = event.clientX
+          }
           pre.y = event.clientY
         }
       }
     }
   }
 }
+
 </script>
 
 <style lang="scss" scoped>
-.vrlive{
+  .vrlive {
 
-  .vr-video{
-    position: relative;
-    margin: auto;
-    #videoContainer{
-    height: calc(100vw / 16 * 9);
-    line-height: 0;
-    }
-    .func{
-      position: absolute;
-      z-index: 2;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%,-50%);
-      height: 50px;
-      font-size: 16px;
-      .loading{
-        position: relative;
-        border-radius: 50%;
-        width: 3em;
-        height: 3em;
-        .border{
-          position: absolute;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          border: 0.45em solid rgba(99, 149, 168, 0.5);
-          border-radius: 50%;
-        }
-        .slow{
-          position: absolute;
-          z-index: 2;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          border-width: 0.45em;
-          border-style: solid;
-          border: 0.45em solid rgba(0, 0, 0, 0);
-          border-top-color: rgb(7, 186, 241);
-          animation: slow 1.5s linear infinite;
-          border-radius: 50%;
-        }
-        .fast{
-          position: absolute;
-          z-index: 1;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100%;
-          border-width: 0.45em;
-          border-style: solid;
-          border: 0.45em solid rgba(0, 0, 0, 0);
-          border-top-color: rgb(10, 126, 161);
-          animation: fast 0.75s linear infinite;
-          border-radius: 50%;
-        }
-        @keyframes slow {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        @keyframes fast {
-          0% {
-            transform: rotate(0deg);
-          }
-          25% {
-            transform: rotate(45deg);
-          }
-          75% {
-            transform: rotate(315deg);
-          }
-          100% {
-            transform: rotate(360deg);
-          }
-        }
+    .vr-video {
+      position: relative;
+      margin: auto;
+
+      #videoContainer {
+        height: calc(100vw / 16 * 9);
+        line-height: 0;
       }
 
-      .btns-play,.btns-pause{
-        i{
-          font-size: 4em;
-          color: rgba(255,255,255,1);
-          transition: color .3s;
+      .func {
+        position: absolute;
+        z-index: 2;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        height: 50px;
+        font-size: 16px;
+
+        .loading {
+          position: relative;
+          border-radius: 50%;
+          width: 3em;
+          height: 3em;
+
+          .border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0.45em solid rgba(99, 149, 168, 0.5);
+            border-radius: 50%;
+          }
+
+          .slow {
+            position: absolute;
+            z-index: 2;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-width: 0.45em;
+            border-style: solid;
+            border: 0.45em solid rgba(0, 0, 0, 0);
+            border-top-color: rgb(7, 186, 241);
+            animation: slow 1.5s linear infinite;
+            border-radius: 50%;
+          }
+
+          .fast {
+            position: absolute;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-width: 0.45em;
+            border-style: solid;
+            border: 0.45em solid rgba(0, 0, 0, 0);
+            border-top-color: rgb(10, 126, 161);
+            animation: fast 0.75s linear infinite;
+            border-radius: 50%;
+          }
+
+          @keyframes slow {
+            to {
+              transform: rotate(360deg);
+            }
+          }
+
+          @keyframes fast {
+            0% {
+              transform: rotate(0deg);
+            }
+
+            25% {
+              transform: rotate(45deg);
+            }
+
+            75% {
+              transform: rotate(315deg);
+            }
+
+            100% {
+              transform: rotate(360deg);
+            }
+          }
         }
-        &:hover{
-          cursor: pointer;
-          i{
-            color: rgba(255,255,255,0.6);
+
+        .btns-play,
+        .btns-pause {
+          i {
+            font-size: 4em;
+            color: rgba(255, 255, 255, 1);
+            transition: color .3s;
+          }
+
+          &:hover {
+            cursor: pointer;
+
+            i {
+              color: rgba(255, 255, 255, 0.6);
+            }
           }
         }
       }
-    }
-    .statistics{
-      position: absolute;
-      z-index: 1;
-      top: 1em;
-      left: 1em;
-      padding: 0.2em 1em;
-      font-size: 13px;
-      color: white;
-      background-color: rgba(0,0,0,0.4);
-      border-radius: 0.2em;
-    }
-  }
-  .playType{
-    display: flex;
-    justify-content: center;
-    margin-top: 30px;
-    width: 100vw;
-    button{
-      margin-right: 20px;
-      padding: 10px 15px;
-      font-size: 15px;
-      color: white;
-      background-image: linear-gradient( 135deg, #ABDCFF 10%, #0396FF 100%);
-      border-radius: 5px;
-      transition: all .3s;
-      &:hover{
-        transform: translateY(-2px);
-        background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
-        box-shadow: 0 2px 5px #40bad5;
+
+      .statistics {
+        position: absolute;
+        z-index: 1;
+        top: 1em;
+        left: 1em;
+        padding: 0.2em 1em;
+        font-size: 13px;
+        color: white;
+        background-color: rgba(0, 0, 0, 0.4);
+        border-radius: 0.2em;
       }
     }
+
+    .orientation {
+      padding: 0 20px;
+      font-size: 14px;
+      color: white;
+    }
+
+    .playType {
+      display: flex;
+      justify-content: center;
+      margin-top: 30px;
+      width: 100vw;
+
+      button {
+        margin-right: 20px;
+        padding: 10px 15px;
+        font-size: 15px;
+        color: white;
+        background-image: linear-gradient(135deg, #ABDCFF 10%, #0396FF 100%);
+        border-radius: 5px;
+        transition: all .3s;
+
+        &:hover {
+          transform: translateY(-2px);
+          background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
+          box-shadow: 0 2px 5px #40bad5;
+        }
+      }
+    }
+
+    video {
+      margin-top: 20px;
+      width: 100%;
+    }
   }
-  video{
-    margin-top: 20px;
-    width: 100%;
-  }
-}
+
 </style>
