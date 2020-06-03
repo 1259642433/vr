@@ -20,7 +20,7 @@ export default {
           type: 'rtmp/flv',
           // rtmp://202.69.69.180:443/webcast/bshdlive-pc
           // rtmp://live.xshaitt.com/kxh/demo
-          src: 'rtmp://202.69.69.180:443/webcast/bshdlive-pc'
+          src: 'rtmp://144.34.165.131/wwt/'
         }, {
           withCredentials: false,
           type: 'application/x-mpegURL',

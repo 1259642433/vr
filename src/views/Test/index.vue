@@ -27,7 +27,7 @@ export default {
           type: 'rtmp/flv',
           // rtmp://202.69.69.180:443/webcast/bshdlive-pc
           // rtmp://live.xshaitt.com/kxh/demo
-          src: 'http://img.ksbbs.com/asset/Mon_1704/15868902d399b87.flv'
+          src: 'rtmp://202.69.69.180:443/webcast/bshdlive-pc'
         }, {
           withCredentials: false,
           type: 'application/x-mpegURL',

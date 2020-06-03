@@ -4,7 +4,8 @@
       <div id="videoContainer">
       </div>
       <div class="statistics">
-        <p>status：{{playVariables.status}}</p>
+        <p>type：{{playVariables.type || '???'}}</p>
+        <p>status：{{playVariables.status || '???'}}</p>
       </div>
       <div class="func">
         <div v-if="playVariables.status == 'pause'" @click="player.play()" class="btns-play">
@@ -48,6 +49,7 @@
 import * as THREE from 'three'
 // const OrbitControls = require('three/examples/js/controls/OrbitControls')
 import threeOrbitControls from 'three-orbit-controls'
+import { error } from 'three'
 const OrbitControls = threeOrbitControls(THREE)
 
 export default {
@@ -72,7 +74,11 @@ export default {
           pause:暂停或用户未点开始按钮
         */
         status: 'pause',
-        controls: false // 控件显示状态
+        controls: false, // 控件显示状态
+        error: {
+          code: 0,
+          msg: ''
+        }
       }
     }
   },
@@ -134,12 +140,23 @@ export default {
         }
       }.bind(this))
       // 判断视频类型
+      this.playVariables.type = 'flv'
+      if (this.playVariables.type === 'flv') {
+        this.getFLV('http://144.34.165.131:8000/wwt/.flv', this.video)
+      } else if (this.playVariables.type === 'flv') {
+        this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
+      } else if (this.playVariables.type === 'normal') {
+        this.getNormalVideo('https://www.wangwentehappy.tk/static/video/2.mp4', this.video)
+      } else {
+        this.playVariables.error.code = 1
+        this.playVariables.error.msg = '未知的视频类型'
+      }
       // http://live.xshaitt.com/kxh/demo.m3u8
       // http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
-      this.getNormalVideo('https://www.wangwentehappy.tk/static/video/2.mp4', this.video)
+      // this.getNormalVideo('https://www.wangwentehappy.tk/static/video/2.mp4', this.video)
       // this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
-      // this.getRTMP('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
-      // this.getFLV('rtmp://202.69.69.180:443/webcast/bshdlive-pc', this.video)
+      // this.getRTMP('rtmp://144.34.165.131:8000/wwt', this.video)
+      // this.getFLV('http://144.34.165.131:8000/wwt/.flv', this.video)
     },
     initContent () {
       this.initVideo()
@@ -205,10 +222,11 @@ export default {
     // },
     //  TODO 等待对接测试
     getFLV (sourceURL, el) {
-      const flv = require('flv.js')
+      const flv = require('flv.js').default
+      console.log(flv)
       if (flv.isSupported()) {
         var flvPlayer = flv.createPlayer({
-          type: 'rtmp/flv',
+          type: 'flv',
           url: sourceURL
         })
         flvPlayer.attachMediaElement(el)
