@@ -1,7 +1,6 @@
 # vue-init
 
-#### 介绍
-vue初始模板
+基于threejs,html5,hlsjs,flvjs编写的vr播放器，播放普通视频，hls及flv直播流
 
 ## Project setup
 ```
