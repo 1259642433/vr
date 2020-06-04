@@ -6,7 +6,7 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    redirect: '/live'
+    redirect: '/vrlive'
   },
   {
     path: '/home',

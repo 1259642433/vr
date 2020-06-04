@@ -1,29 +1,56 @@
 <template>
   <div class="vrlive">
     <div class="vr-video">
-      <div id="videoContainer">
+      <div id="videoContainer" @mousemove="ControlVisible()">
       </div>
-      <div class="statistics">
+      <div class="vr-statistics">
         <p>type：{{playVariables.type || '???'}}</p>
         <p>status：{{playVariables.status || '???'}}</p>
+        <p>currentTime: {{playVariables.currentTime}}</p>
+        <p>totalTime: {{playVariables.totalTime}}</p>
       </div>
-      <div class="func">
-        <div v-if="playVariables.status == 'pause'" @click="player.play()" class="btns-play">
+      <div class="vr-func">
+        <div v-if="playVariables.status == 'pause'&&!playVariables.playClick"
+          @click="player.play();playVariables.playClick=true" class="btns-play">
           <i class="iconfont icon-icon_play"></i>
         </div>
-        <div v-else-if="playVariables.status == 'playing'" @click="player.pause()" class="btns-pause">
+        <div v-else-if="playVariables.status == 'playing'&&!playVariables.playClick" @click="player.pause()"
+          class="btns-pause">
           <i class="iconfont icon-ai07"></i>
         </div>
-        <div v-else-if="playVariables.status == 'loading'" class="loading">
-          <div class="border"></div>
-          <div class="slow"></div>
-          <div class="fast"></div>
+      </div>
+      <div v-if="playVariables.status == 'loading'" class="vr-loading">
+        <div class="border"></div>
+        <div class="slow"></div>
+        <div class="fast"></div>
+      </div>
+      <div class="vr-bar" v-if="playVariables.playClick" id="control">
+        <div class="bg"></div>
+        <div class="btns">
+          <div v-if="playVariables.status === 'playing'" @click="player.pause()" class="btns-pause">
+            <i class="iconfont icon-ai07"></i>
+          </div>
+          <div v-else @click="player.play()" class="btns-play">
+            <i class="iconfont icon-icon_play"></i>
+          </div>
+        </div>
+        <div v-if="playVariables.type == 'normal'" class="progress-container">
+          <div @click="jumpTo($event)" class="progress-wrapper">
+            <div class="progress" id="progress-play"></div>
+          </div>
+          <div class="btn-wrapper">
+            <div class="btn" id="progress-btn"></div>
+          </div>
+        </div>
+        <div v-else class="type">
+          <span class="statu-circle"></span>
+          <span>{{playVariables.type}}</span>
         </div>
       </div>
     </div>
     <div class="playType">
-      <button @click="getNormalVideo('http://www.wangwentehappy.tk/static/video/2.mp4', video)">普通视频</button>
-      <button @click="getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', video)">hls</button>
+      <button>普通视频</button>
+      <button>hls</button>
       <button>rtmp</button>
       <button>flv</button>
     </div>
@@ -32,16 +59,16 @@
         陀螺仪数据:
       </p>
       <p>
-        alpha(z轴):{{deviceOrientationData.beta||'请用手机查看参数'}}
+        alpha(z轴):{{deviceOrientationData.alpha||'手机查看参数'}}
       </p>
       <p>
-        beta(x轴):{{deviceOrientationData.beta||'请用手机查看参数'}}
+        beta(x轴):{{deviceOrientationData.beta||'手机查看参数'}}
       </p>
       <p>
-        gamma(y轴):{{deviceOrientationData.gamma||'请用手机查看参数'}}
+        gamma(y轴):{{deviceOrientationData.gamma||'手机查看参数'}}
       </p>
     </div>
-    <video src="http://144.34.165.131:12577/static/file/storageArea/1.mp4" preload="auto" controls></video>
+    <video src="https://www.wangwentehappy.tk/assets/video/1.mp4" preload="auto" controls></video>
   </div>
 </template>
 
@@ -49,7 +76,7 @@
 import * as THREE from 'three'
 // const OrbitControls = require('three/examples/js/controls/OrbitControls')
 import threeOrbitControls from 'three-orbit-controls'
-import { error } from 'three'
+// import { error } from 'three'
 const OrbitControls = threeOrbitControls(THREE)
 
 export default {
@@ -64,17 +91,27 @@ export default {
       controls: null,
       deviceOrientationData: {},
       hls: null,
-      player: null,
+      player: {},
       playVariables: {
-        type: '', // 视频类型
-        // 播放状态，与视频播放状态对应
+        // 视频类型
         /*
+          播放状态，与视频播放状态对应
+          normal:加载中,
+          hls:视频播放中,包括视频中间加载后继续播放
+          flv:暂停或用户未点开始按钮 (http-flv,websocket-flv)
+        */
+        type: 'normal',
+        /*
+          播放状态，与视频播放状态对应
           loading:加载中,
           playing:视频播放中,包括视频中间加载后继续播放
           pause:暂停或用户未点开始按钮
         */
         status: 'pause',
-        controls: false, // 控件显示状态
+        playClick: false,
+        // 控件显示状态
+        currentTime: 0,
+        progress: 0,
         error: {
           code: 0,
           msg: ''
@@ -84,12 +121,15 @@ export default {
   },
   watch: {
     playVariables (val) {
-      // console.log(this.playVariables.status)
-      // console.log(this.video)
-      if (val.status === 'pause') {
 
-      }
     }
+    // 'player.currentTime': {
+    //   handler (val) {
+    //     console.log(val)
+    //     this.player.currentTime = 500
+    //   },
+    //   deep: true
+    // }
   },
   mounted () {
     this.init()
@@ -124,6 +164,7 @@ export default {
     initVideo () {
       this.video = document.createElement('video')
       this.video.preload = 'auto'
+      this.video.muted = true
       this.video.crossOrigin = 'anonymous'
       this.video.addEventListener('waiting', function (event) {
         this.playVariables.status = 'loading'
@@ -135,18 +176,28 @@ export default {
         this.playVariables.status = 'pause'
       }.bind(this))
       this.video.addEventListener('canplay', function (event) {
+        this.playVariables.duration = this.player.duration
         if (this.playVariables.status === 'loading') {
           this.playVariables.status = 'playing'
         }
       }.bind(this))
+      if (this.playVariables.type === 'normal') {
+        this.video.addEventListener('timeupdate', function (event) {
+          this.playVariables.currentTime = Math.floor(this.player.currentTime)
+          this.playVariables.totalTime = this.playVariables.totalTime ? this.playVariables.totalTime : Math.floor(
+            this.player.duration)
+          this.playVariables.progress = this.playVariables.currentTime / this.playVariables.totalTime
+          document.getElementById('progress-play').style.width = (this.playVariables.progress) * 100 + '%'
+          document.getElementById('progress-btn').style.marginLeft = (this.playVariables.progress) * 100 + '%'
+        }.bind(this))
+      }
       // 判断视频类型
-      this.playVariables.type = 'flv'
       if (this.playVariables.type === 'flv') {
-        this.getFLV('http://144.34.165.131:8000/wwt/.flv', this.video)
+        this.getFLV('http://localhost:8000/wwt/.flv', this.video)
       } else if (this.playVariables.type === 'flv') {
         this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
       } else if (this.playVariables.type === 'normal') {
-        this.getNormalVideo('https://www.wangwentehappy.tk/static/video/2.mp4', this.video)
+        this.getNormalVideo('https://www.wangwentehappy.tk/assets/video/1.mp4', this.video)
       } else {
         this.playVariables.error.code = 1
         this.playVariables.error.msg = '未知的视频类型'
@@ -205,9 +256,9 @@ export default {
       }
       this.player = el
     },
-    // 废弃
+    // abandoned 对接rtmp流
     // 非原生video标签。
-    // confuse canvas?
+    // confuse object?如何渲染?
     // getRTMP (sourceURL, el) {
     //   el.id = 'rtmpVideo'
     //   console.log(el)
@@ -223,7 +274,6 @@ export default {
     //  TODO 等待对接测试
     getFLV (sourceURL, el) {
       const flv = require('flv.js').default
-      console.log(flv)
       if (flv.isSupported()) {
         var flvPlayer = flv.createPlayer({
           type: 'flv',
@@ -239,40 +289,56 @@ export default {
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(el.clientWidth, el.clientHeight)
     },
-    // TODO 对接鼠标移动事件
-    addMouseEvent (el) {
-      const pre = {
-        x: '',
-        y: ''
-      }
-      // const cur = {
-      //   x: '',
-      //   y: ''
-      // }
-      let isDown = false
-      const self = this
-      el.onmousedown = function (event) {
-        isDown = true
-      }
-      el.onmouseup = function (event) {
-        isDown = false
-      }
-      el.onmousemove = function (event) {
-        if (isDown) {
-          console.log(event)
-          console.log(pre)
-          console.log(self.camera)
-          if (event.movementY && !event.movementX) {
-            self.camera.rotation.x -= event.movementY / 500
-          } else if (!event.movementY && event.movementX) {
-            self.camera.rotation.y += event.movementX / 500
-          } else {
-            pre.x = event.clientX
-          }
-          pre.y = event.clientY
+    ControlVisible () {
+      const control = document.getElementById('control')
+      if (this.playVariables.status === 'playing') {
+        if (control.classList.contains('control-hidden')) {
+          control.classList.remove('control-hidden')
+          setTimeout(() => {
+            control.classList.add('control-hidden')
+          }, 0)
+        } else {
+          control.classList.add('control-hidden')
         }
       }
+    },
+    jumpTo ($e) {
+      console.log(e)
     }
+    // abandoned 对接鼠标移动事件
+    // addMouseEvent (el) {
+    //   const pre = {
+    //     x: '',
+    //     y: ''
+    //   }
+    //   // const cur = {
+    //   //   x: '',
+    //   //   y: ''
+    //   // }
+    //   let isDown = false
+    //   const self = this
+    //   el.onmousedown = function (event) {
+    //     isDown = true
+    //   }
+    //   el.onmouseup = function (event) {
+    //     isDown = false
+    //   }
+    //   el.onmousemove = function (event) {
+    //     if (isDown) {
+    //       console.log(event)
+    //       console.log(pre)
+    //       console.log(self.camera)
+    //       if (event.movementY && !event.movementX) {
+    //         self.camera.rotation.x -= event.movementY / 500
+    //       } else if (!event.movementY && event.movementX) {
+    //         self.camera.rotation.y += event.movementX / 500
+    //       } else {
+    //         pre.x = event.clientX
+    //       }
+    //       pre.y = event.clientY
+    //     }
+    //   }
+    // }
   }
 }
 
@@ -288,19 +354,67 @@ export default {
       #videoContainer {
         height: calc(100vw / 16 * 9);
         line-height: 0;
+
+        &:hover {
+          .control {
+            display: block;
+            animation: mousehover 3s;
+            animation-delay: 5s;
+            animation-fill-mode: forwards;
+          }
+        }
+
       }
 
-      .func {
-        position: absolute;
-        z-index: 2;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        height: 50px;
-        font-size: 16px;
+      .control-hidden {
+        visibility: visible;
+        opacity: 1;
+        animation: mousehover 2s;
+        animation-delay: 3s;
+        animation-fill-mode: forwards;
+      }
 
-        .loading {
-          position: relative;
+      @keyframes mousehover {
+        100% {
+          visibility: hidden;
+          opacity: 0;
+        }
+      }
+
+      .vr {
+        &-func {
+          position: absolute;
+          z-index: 2;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          height: 50px;
+          font-size: 16px;
+
+          .btns-play,
+          .btns-pause {
+            i {
+              font-size: 4em;
+              color: rgba(255, 255, 255, 1);
+              transition: color .3s;
+            }
+
+            &:hover {
+              cursor: pointer;
+
+              i {
+                color: rgba(255, 255, 255, 0.6);
+              }
+            }
+          }
+        }
+
+        &-loading {
+          position: absolute;
+          z-index: 2;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
           border-radius: 50%;
           width: 3em;
           height: 3em;
@@ -360,6 +474,10 @@ export default {
               transform: rotate(45deg);
             }
 
+            50% {
+              border-top-color: rgb(195, 236, 248);
+            }
+
             75% {
               transform: rotate(315deg);
             }
@@ -370,35 +488,98 @@ export default {
           }
         }
 
-        .btns-play,
-        .btns-pause {
-          i {
-            font-size: 4em;
-            color: rgba(255, 255, 255, 1);
-            transition: color .3s;
-          }
+        &-bar {
+          position: absolute;
+          z-index: 10;
+          bottom: 0;
+          display: flex;
+          align-items: center;
+          padding: 1em 1em;
+          box-sizing: border-box;
+          width: 100%;
+          background-image: linear-gradient(to top, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
 
-          &:hover {
-            cursor: pointer;
+          .btns {
+            padding: 0.5em;
 
-            i {
-              color: rgba(255, 255, 255, 0.6);
+            &-play,
+            &-pause {
+              i {
+                color: white;
+              }
+            }
+            &:hover{
+              cursor: pointer;
             }
           }
+
+          .progress-container {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            padding: 0 1em;
+
+            .progress-wrapper {
+              position: relative;
+              width: 100%;
+              height: 0.2em;
+              border-radius: 30px;
+              background-color: rgba(150, 150, 150, 1);
+              overflow: hidden;
+
+              .progress {
+                position: absolute;
+                width: 0%;
+                height: 100%;
+                background-color: rgb(22, 175, 236);
+                transition: width .5s;
+              }
+
+              &:hover {
+                cursor: pointer;
+              }
+            }
+
+            .btn-wrapper {
+              position: absolute;
+              z-index: 9;
+              left: 1em;
+              width: calc(100% - 2em);
+
+              .btn {
+                margin-left: 0;
+                width: 0.8em;
+                height: 0.8em;
+                border-radius: 50%;
+                background-color: white;
+              }
+            }
+          }
+
+          .type {
+            padding: 0 2em;
+            font-size: 0.95em;
+            font-weight: 300;
+            color: white;
+
+            .statu-circle {}
+          }
+        }
+
+        &-statistics {
+          position: absolute;
+          z-index: 1;
+          top: 1em;
+          left: 1em;
+          padding: 0.2em 1em;
+          font-size: 13px;
+          color: white;
+          background-color: rgba(0, 0, 0, 0.4);
+          border-radius: 0.2em;
         }
       }
 
-      .statistics {
-        position: absolute;
-        z-index: 1;
-        top: 1em;
-        left: 1em;
-        padding: 0.2em 1em;
-        font-size: 13px;
-        color: white;
-        background-color: rgba(0, 0, 0, 0.4);
-        border-radius: 0.2em;
-      }
     }
 
     .orientation {
@@ -431,8 +612,10 @@ export default {
     }
 
     video {
+      display: block;
       margin-top: 20px;
       width: 100%;
+
     }
   }
 
