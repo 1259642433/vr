@@ -1,6 +1,6 @@
-# vue-init
+# vue-vr
 
-基于threejs,html5,hlsjs,flvjs编写的vr播放器，播放普通视频，hls及flv直播流
+基于threejs,html5,hlsjs,flvjs编写的全景播放器，播放普通视频，hls及flv直播流
 
 ## Project setup
 ```

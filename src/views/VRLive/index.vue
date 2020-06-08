@@ -1,58 +1,63 @@
 <template>
   <div class="vrlive">
-    <div class="vr-video">
-      <div id="videoContainer" @mousemove="ControlVisible()">
-      </div>
-      <div class="vr-statistics">
-        <p>type：{{playVariables.type || '???'}}</p>
-        <p>status：{{playVariables.status || '???'}}</p>
-        <p>currentTime: {{playVariables.currentTime}}</p>
-        <p>totalTime: {{playVariables.totalTime}}</p>
-      </div>
-      <div class="vr-func">
-        <div v-if="playVariables.status == 'pause'&&!playVariables.playClick"
-          @click="player.play();playVariables.playClick=true" class="btns-play">
-          <i class="iconfont icon-icon_play"></i>
+    <div id="videoContainer" class="vr-video">
+      <div class="video-wrapper">
+        <div id="video" @mousemove="ControlVisible()">
         </div>
-        <div v-else-if="playVariables.status == 'playing'&&!playVariables.playClick" @click="player.pause()"
-          class="btns-pause">
-          <i class="iconfont icon-ai07"></i>
+        <div class="vr-statistics">
+          <p>type：{{playVariables.type || '???'}}</p>
+          <p>status：{{playVariables.status || '???'}}</p>
+          <p>currentTime: {{playVariables.currentTime}}</p>
+          <p>totalTime: {{playVariables.totalTime}}</p>
         </div>
-      </div>
-      <div v-if="playVariables.status == 'loading'" class="vr-loading">
-        <div class="border"></div>
-        <div class="slow"></div>
-        <div class="fast"></div>
-      </div>
-      <div class="vr-bar" v-if="playVariables.playClick" id="control">
-        <div class="bg"></div>
-        <div class="btns">
-          <div v-if="playVariables.status === 'playing'" @click="player.pause()" class="btns-pause">
-            <i class="iconfont icon-ai07"></i>
-          </div>
-          <div v-else @click="player.play()" class="btns-play">
+        <div class="vr-func">
+          <div v-if="playVariables.status == 'pause'&&!playVariables.playClick"
+            @click="player.play();playVariables.playClick=true" class="btns-play">
             <i class="iconfont icon-icon_play"></i>
           </div>
-        </div>
-        <div v-if="playVariables.type == 'normal'" class="progress-container">
-          <div @click="jumpTo($event)" class="progress-wrapper">
-            <div class="progress" id="progress-play"></div>
-          </div>
-          <div class="btn-wrapper">
-            <div class="btn" id="progress-btn"></div>
+          <div v-else-if="playVariables.status == 'playing'&&!playVariables.playClick" @click="player.pause()"
+            class="btns-pause">
+            <i class="iconfont icon-ai07"></i>
           </div>
         </div>
-        <div v-else class="type">
-          <span class="statu-circle"></span>
-          <span>{{playVariables.type}}</span>
+        <div v-if="playVariables.status == 'loading'" class="vr-loading">
+          <div class="border"></div>
+          <div class="slow"></div>
+          <div class="fast"></div>
+        </div>
+        <div class="vr-bar" v-if="playVariables.playClick" id="control">
+          <div class="bg"></div>
+          <div class="btns">
+            <div v-if="playVariables.status === 'playing'" @click="player.pause()" class="btns-pause">
+              <i class="iconfont icon-ai07"></i>
+            </div>
+            <div v-else @click="player.play()" class="btns-play">
+              <i class="iconfont icon-icon_play"></i>
+            </div>
+          </div>
+          <div v-if="playVariables.type == 'Normal'" class="progress-container">
+            <div @click="jumpTo($event)" class="progress-wrapper">
+              <div class="progress" id="progress-play"></div>
+            </div>
+            <div class="btn-wrapper">
+              <div class="btn" id="progress-btn"></div>
+            </div>
+          </div>
+          <div v-else class="type">
+            <span class="statu-circle"></span>
+            <span>{{playVariables.type}}</span>
+          </div>
+          <div @click="changeFullscreenStatu()" class="fullscreen">
+            <i class="iconfont icon-quanping"></i>
+          </div>
         </div>
       </div>
     </div>
     <div class="playType">
       <button>普通视频</button>
-      <button>hls</button>
-      <button>rtmp</button>
-      <button>flv</button>
+      <button>HLS</button>
+      <!-- <button>rtmp</button> -->
+      <button>FLV</button>
     </div>
     <div class="orientation">
       <p>
@@ -92,26 +97,34 @@ export default {
       deviceOrientationData: {},
       hls: null,
       player: {},
+      videoContainer: '',
       playVariables: {
-        // 视频类型
         /*
-          播放状态，与视频播放状态对应
-          normal:加载中,
-          hls:视频播放中,包括视频中间加载后继续播放
-          flv:暂停或用户未点开始按钮 (http-flv,websocket-flv)
-        */
-        type: 'normal',
+              视频类型
+              Normal:加载中,
+              HLS:视频播放中,包括视频中间加载后继续播放
+              FLV:暂停或用户未点开始按钮 (http-flv,websocket-flv)
+            */
         /*
-          播放状态，与视频播放状态对应
-          loading:加载中,
-          playing:视频播放中,包括视频中间加载后继续播放
-          pause:暂停或用户未点开始按钮
+          测试地址
+          http://localhost:8000/wwt/.flv
+          http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
+          https://www.wangwentehappy.tk/assets/video/1.mp4
+       */
+        type: 'Normal',
+        source: '',
+        /*
+              播放状态，与视频播放状态对应
+              loading:加载中,
+              playing:视频播放中,包括视频中间加载后继续播放
+              pause:暂停或用户未点开始按钮
         */
         status: 'pause',
         playClick: false,
         // 控件显示状态
         currentTime: 0,
         progress: 0,
+        fullscreenStatu: false,
         error: {
           code: 0,
           msg: ''
@@ -132,11 +145,15 @@ export default {
     // }
   },
   mounted () {
+    this.videoContainer = document.getElementById('videoContainer')
     this.init()
+    console.log(screen)
+    console.log(screen.orientation)
+    // alert(orientation)
   },
   methods: {
     init () {
-      const container = document.getElementById('videoContainer')
+      const container = document.getElementById('video')
       this.initScene()
       this.initCamera(container)
       this.initRenderer(container)
@@ -144,10 +161,12 @@ export default {
       this.initControls(container)
       this.render()
       // this.addMouseEvent(container)
-      window.addEventListener('deviceorientation', function (event) {
-        this.deviceOrientationData = event
-      }.bind(this), false)
-      window.addEventListener('resize', this.onWindowResize(container), false)
+      // window.addEventListener('deviceorientation', function (event) {
+      //   this.deviceOrientationData = event
+      // }.bind(this), false)
+      window.addEventListener('resize', function () {
+        this.onWindowResize(container)
+      }.bind(this))
     },
     initScene () {
       this.scene = new THREE.Scene()
@@ -192,22 +211,16 @@ export default {
         }.bind(this))
       }
       // 判断视频类型
-      if (this.playVariables.type === 'flv') {
+      if (this.playVariables.type === 'FLV') {
         this.getFLV('http://localhost:8000/wwt/.flv', this.video)
-      } else if (this.playVariables.type === 'flv') {
+      } else if (this.playVariables.type === 'HLS') {
         this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
-      } else if (this.playVariables.type === 'normal') {
+      } else if (this.playVariables.type === 'Normal') {
         this.getNormalVideo('https://www.wangwentehappy.tk/assets/video/1.mp4', this.video)
       } else {
         this.playVariables.error.code = 1
         this.playVariables.error.msg = '未知的视频类型'
       }
-      // http://live.xshaitt.com/kxh/demo.m3u8
-      // http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8
-      // this.getNormalVideo('https://www.wangwentehappy.tk/static/video/2.mp4', this.video)
-      // this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
-      // this.getRTMP('rtmp://144.34.165.131:8000/wwt', this.video)
-      // this.getFLV('http://144.34.165.131:8000/wwt/.flv', this.video)
     },
     initContent () {
       this.initVideo()
@@ -221,10 +234,15 @@ export default {
       })
       this.mesh = new THREE.Mesh(geometry, material)
       this.mesh.position.set(0, 0, 0)
+      console.log(this.mesh)
+      // this.mesh.rotation.x = Math.PI / 2
+      // this.mesh.rotation.y = Math.PI / 2
+      // this.mesh.rotation.z = Math.PI / 2
       this.scene.add(this.mesh)
     },
     initControls (el) {
       this.controls = new OrbitControls(this.camera, el)
+      // this.controls.target = new THREE.Vector3(0, Math.PI, 0)
       this.controls.rotateSpeed = 0.05
       this.controls.enableDamping = true
       this.controls.dampingFactor = 0.05
@@ -271,7 +289,6 @@ export default {
     //     console.log('准备就绪')
     //   })
     // },
-    //  TODO 等待对接测试
     getFLV (sourceURL, el) {
       const flv = require('flv.js').default
       if (flv.isSupported()) {
@@ -302,8 +319,46 @@ export default {
         }
       }
     },
-    jumpTo ($e) {
-      console.log(e)
+    // jumpTo ($e) {
+    //   console.log(e)
+    // }
+    async changeFullscreenStatu () {
+      if (this.playVariables.fullscreenStatu) {
+        this.exitFullscreen()
+        screen.orientation.unlock()
+        this.videoContainer.classList.remove('fullScreen-mobile')
+      } else {
+        this.fullScreen()
+        // 只在谷歌浏览器下生效
+        screen.orientation.lock('landscape-primary')
+        // screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation
+        // new ScreenOrientation().lock('landscape-secondary')
+        // console.log(screen)
+        // screen.msLockOrientation.lock('landscape-primary')
+        this.videoContainer.classList.add('fullScreen-mobile')
+      }
+      this.playVariables.fullscreenStatu = !this.playVariables.fullscreenStatu
+    },
+    fullScreen () {
+      const el = this.videoContainer
+      if (el.requestFullscreen) {
+        el.requestFullscreen()
+      } else if (el.mozRequestFullScreen) {
+        el.mozRequestFullScreen()
+      } else if (el.webkitRequestFullScreen) {
+        el.webkitRequestFullScreen()
+      }
+    },
+    exitFullscreen () {
+      const el = document
+      el.exitFullscreen()
+      if (el.exitFullscreen) {
+        el.exitFullscreen()
+      } else if (el.mozCancelFullScreen) {
+        el.mozCancelFullScreen()
+      } else if (el.webkitCancelFullScreen) {
+        el.webkitCancelFullScreen()
+      }
     }
     // abandoned 对接鼠标移动事件
     // addMouseEvent (el) {
@@ -346,15 +401,15 @@ export default {
 
 <style lang="scss" scoped>
   .vrlive {
+    overflow-y: visible;
 
     .vr-video {
       position: relative;
-      margin: auto;
-
-      #videoContainer {
+      .video-wrapper{
         height: calc(100vw / 16 * 9);
-        line-height: 0;
-
+      }
+      #video {
+        height: 100%;
         &:hover {
           .control {
             display: block;
@@ -508,7 +563,8 @@ export default {
                 color: white;
               }
             }
-            &:hover{
+
+            &:hover {
               cursor: pointer;
             }
           }
@@ -565,6 +621,17 @@ export default {
 
             .statu-circle {}
           }
+
+          .fullscreen {
+            i {
+              font-size: 1.4em;
+              color: white;
+            }
+
+            &:hover {
+              cursor: pointer;
+            }
+          }
         }
 
         &-statistics {
@@ -580,6 +647,21 @@ export default {
         }
       }
 
+    }
+
+    .fullScreen-mobile {
+      .video-wrapper{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        // transform-origin:top left;
+        // transform: rotate(90deg) translate(-0vh, -100vw);
+      }
+      #video {
+
+      }
     }
 
     .orientation {
