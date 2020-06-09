@@ -51,6 +51,8 @@
             <i class="iconfont icon-quanping"></i>
           </div>
         </div>
+        <div class="vr-notice" id="vrNotice" v-html="playVariables.notice">
+        </div>
       </div>
     </div>
     <div class="playType">
@@ -73,13 +75,11 @@
         gamma(y轴):{{deviceOrientationData.gamma||'手机查看参数'}}
       </p>
     </div>
-    <video src="https://www.wangwentehappy.tk/assets/video/1.mp4" preload="auto" controls></video>
   </div>
 </template>
 
 <script>
 import * as THREE from 'three'
-// const OrbitControls = require('three/examples/js/controls/OrbitControls')
 import threeOrbitControls from 'three-orbit-controls'
 // import { error } from 'three'
 const OrbitControls = threeOrbitControls(THREE)
@@ -100,11 +100,11 @@ export default {
       videoContainer: '',
       playVariables: {
         /*
-              视频类型
-              Normal:加载中,
-              HLS:视频播放中,包括视频中间加载后继续播放
-              FLV:暂停或用户未点开始按钮 (http-flv,websocket-flv)
-            */
+                视频类型
+                Normal:加载中,
+                HLS:视频播放中,包括视频中间加载后继续播放
+                FLV:暂停或用户未点开始按钮 (http-flv,websocket-flv)
+              */
         /*
           测试地址
           http://localhost:8000/wwt/.flv
@@ -114,42 +114,61 @@ export default {
         type: 'Normal',
         source: '',
         /*
-              播放状态，与视频播放状态对应
-              loading:加载中,
-              playing:视频播放中,包括视频中间加载后继续播放
-              pause:暂停或用户未点开始按钮
-        */
+                播放状态，与视频播放状态对应
+                loading:加载中,
+                playing:视频播放中,包括视频中间加载后继续播放
+                pause:暂停或用户未点开始按钮
+          */
         status: 'pause',
         playClick: false,
         // 控件显示状态
         currentTime: 0,
         progress: 0,
-        fullscreenStatu: false,
+        // fullscreenStatu: false,
+        notice:'',
         error: {
           code: 0,
           msg: ''
         }
       }
+      // cameraVariables: {
+      //   isUserInteracting: false,
+      //   lon: 0,
+      //   lat: 0,
+      //   phi: 0,
+      //   theta: 0,
+      //   distance: 1,
+      //   onPointerDownPointerX: 0,
+      //   onPointerDownPointerY: 0,
+      //   onPointerDownLon: 0,
+      //   onPointerDownLat: 0,
+      //   sensitivity: 0.1
+      // }
+    }
+  },
+  computed: {
+    fullScreenStatu () {
+      return document.mozFullScreen || document.webkitIsFullScreen
     }
   },
   watch: {
     playVariables (val) {
 
+    },
+    fullScreenStatu (val) {
+      console.log(val)
+      if (val) {
+        this.videoContainer.classList.add('fullScreen-mobile')
+      } else {
+        this.videoContainer.classList.remove('fullScreen-mobile')
+      }
     }
-    // 'player.currentTime': {
-    //   handler (val) {
-    //     console.log(val)
-    //     this.player.currentTime = 500
-    //   },
-    //   deep: true
-    // }
   },
   mounted () {
     this.videoContainer = document.getElementById('videoContainer')
     this.init()
     console.log(screen)
     console.log(screen.orientation)
-    // alert(orientation)
   },
   methods: {
     init () {
@@ -173,7 +192,8 @@ export default {
     },
     initCamera (el) {
       this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 1, 1100)
-      this.camera.position.set(1, 0, 0)
+      this.camera.position.set(1,0,0)
+      // this.camera.target = new THREE.Vector3(0, 0, 0)
     },
     initRenderer (el) {
       this.renderer = new THREE.WebGLRenderer()
@@ -234,10 +254,6 @@ export default {
       })
       this.mesh = new THREE.Mesh(geometry, material)
       this.mesh.position.set(0, 0, 0)
-      console.log(this.mesh)
-      // this.mesh.rotation.x = Math.PI / 2
-      // this.mesh.rotation.y = Math.PI / 2
-      // this.mesh.rotation.z = Math.PI / 2
       this.scene.add(this.mesh)
     },
     initControls (el) {
@@ -250,6 +266,7 @@ export default {
     render () {
       requestAnimationFrame(this.render)
       this.controls.update()
+      // this.cameraUpdate()
       this.renderer.render(this.scene, this.camera)
     },
     getNormalVideo (sourceURL, el) {
@@ -306,36 +323,25 @@ export default {
       this.camera.updateProjectionMatrix()
       this.renderer.setSize(el.clientWidth, el.clientHeight)
     },
-    ControlVisible () {
-      const control = document.getElementById('control')
-      if (this.playVariables.status === 'playing') {
-        if (control.classList.contains('control-hidden')) {
-          control.classList.remove('control-hidden')
-          setTimeout(() => {
-            control.classList.add('control-hidden')
-          }, 0)
-        } else {
-          control.classList.add('control-hidden')
-        }
-      }
-    },
     // jumpTo ($e) {
     //   console.log(e)
     // }
     async changeFullscreenStatu () {
       if (this.playVariables.fullscreenStatu) {
         this.exitFullscreen()
-        screen.orientation.unlock()
-        this.videoContainer.classList.remove('fullScreen-mobile')
+        // screen.orientation.unlock()
+        // this.videoContainer.classList.remove('full-screen-mobile')
       } else {
         this.fullScreen()
+        this.playVariables.notice = '为了更好的观看体验<br>请关闭屏幕锁定横屏观看该视频'
+        this.showNotice()
         // 只在谷歌浏览器下生效
-        screen.orientation.lock('landscape-primary')
+        // screen.orientation.lock('landscape-primary')
+        // this.videoContainer.classList.add('full-screen-mobile')
         // screen.lockOrientationUniversal = screen.lockOrientation || screen.mozLockOrientation || screen.msLockOrientation
         // new ScreenOrientation().lock('landscape-secondary')
         // console.log(screen)
         // screen.msLockOrientation.lock('landscape-primary')
-        this.videoContainer.classList.add('fullScreen-mobile')
       }
       this.playVariables.fullscreenStatu = !this.playVariables.fullscreenStatu
     },
@@ -359,40 +365,143 @@ export default {
       } else if (el.webkitCancelFullScreen) {
         el.webkitCancelFullScreen()
       }
-    }
-    // abandoned 对接鼠标移动事件
+    },
+    showNotice(){
+      let notice = document.getElementById('vrNotice')
+      if (notice.classList.contains('vr-notice-show')) {
+          notice.classList.remove('vr-notice-show')
+          setTimeout(() => {
+            notice.classList.add('vr-notice-show')
+          }, 0)
+        } else {
+          notice.classList.add('vr-notice-show')
+        }
+    },
+    ControlVisible () {
+      const control = document.getElementById('control')
+      if (this.playVariables.status === 'playing') {
+        if (control.classList.contains('control-hidden')) {
+          control.classList.remove('control-hidden')
+          setTimeout(() => {
+            control.classList.add('control-hidden')
+          }, 0)
+        } else {
+          control.classList.add('control-hidden')
+        }
+      }
+    },
+    // 有更好的选择 three轨道控制器
+    // abandoned 对接鼠标移动事件,剩余惯性尚需对接，使滑动体验更加流畅
     // addMouseEvent (el) {
-    //   const pre = {
-    //     x: '',
-    //     y: ''
+    //   el.addEventListener('mousedown', onDocumentMouseDown.bind(this), false)
+    //   el.addEventListener('mousemove', onDocumentMouseMove.bind(this), false)
+    //   el.addEventListener('mouseup', onDocumentMouseUp.bind(this), false)
+    //   el.addEventListener('touchstart', onDocumentTouchStart.bind(this), false)
+    //   el.addEventListener('touchmove', onDocumentTouchMove.bind(this), false)
+    //   el.addEventListener('touchend', onDocumentTouchEnd.bind(this), false)
+
+    //   function onDocumentMouseDown (event) {
+    //     event.preventDefault()
+
+    //     this.cameraVariables.isUserInteracting = true
+
+    //     this.cameraVariables.onPointerDownPointerX = event.clientX
+    //     this.cameraVariables.onPointerDownPointerY = event.clientY
+
+    //     this.cameraVariables.onPointerDownLon = this.cameraVariables.lon
+    //     this.cameraVariables.onPointerDownLat = this.cameraVariables.lat
     //   }
-    //   // const cur = {
+
+    //   function onDocumentMouseMove (event) {
+    //     if (this.cameraVariables.isUserInteracting === true) {
+    //       this.cameraVariables.lon =
+    //           (this.cameraVariables.onPointerDownPointerX - event.clientX) * this.cameraVariables.sensitivity +
+    //           this.cameraVariables.onPointerDownLon
+    //       this.cameraVariables.lat =
+    //           (event.clientY - this.cameraVariables.onPointerDownPointerY) * this.cameraVariables.sensitivity +
+    //           this.cameraVariables.onPointerDownLat
+    //       console.log(this.cameraVariables.lat)
+    //     }
+    //   }
+
+    //   function onDocumentMouseUp () {
+    //     this.cameraVariables.isUserInteracting = false
+    //   }
+
+    //   function onDocumentTouchStart (event) {
+    //     event.preventDefault()
+
+    //     this.cameraVariables.isUserInteracting = true
+
+    //     this.cameraVariables.onPointerDownPointerX = event.touches[0].clientX
+    //     this.cameraVariables.onPointerDownPointerY = event.touches[0].clientY
+
+    //     this.cameraVariables.onPointerDownLon = this.cameraVariables.lon
+    //     this.cameraVariables.onPointerDownLat = this.cameraVariables.lat
+    //   }
+
+    //   function onDocumentTouchMove (event) {
+    //     if (this.cameraVariables.isUserInteracting === true) {
+    //       this.cameraVariables.lon =
+    //           (this.cameraVariables.onPointerDownPointerX - event.touches[0].clientX) * this.cameraVariables
+    //             .sensitivity +
+    //           this.cameraVariables.onPointerDownLon
+    //       this.cameraVariables.lat =
+    //           (event.touches[0].clientY - this.cameraVariables.onPointerDownPointerY) * this.cameraVariables
+    //             .sensitivity +
+    //           this.cameraVariables.onPointerDownLat
+    //     }
+    //   }
+
+    //   function onDocumentTouchEnd () {
+    //     this.cameraVariables.isUserInteracting = false
+    //   }
+    //   // const pre = {
     //   //   x: '',
     //   //   y: ''
     //   // }
-    //   let isDown = false
-    //   const self = this
-    //   el.onmousedown = function (event) {
-    //     isDown = true
-    //   }
-    //   el.onmouseup = function (event) {
-    //     isDown = false
-    //   }
-    //   el.onmousemove = function (event) {
-    //     if (isDown) {
-    //       console.log(event)
-    //       console.log(pre)
-    //       console.log(self.camera)
-    //       if (event.movementY && !event.movementX) {
-    //         self.camera.rotation.x -= event.movementY / 500
-    //       } else if (!event.movementY && event.movementX) {
-    //         self.camera.rotation.y += event.movementX / 500
-    //       } else {
-    //         pre.x = event.clientX
-    //       }
-    //       pre.y = event.clientY
-    //     }
-    //   }
+    //   // // const cur = {
+    //   // //   x: '',
+    //   // //   y: ''
+    //   // // }
+    //   // let isDown = false
+    //   // const self = this
+    //   // el.onmousedown = function (event) {
+    //   //   isDown = true
+    //   // }
+    //   // el.onmouseup = function (event) {
+    //   //   isDown = false
+    //   // }
+    //   // el.onmousemove = function (event) {
+    //   //   if (isDown) {
+    //   //     console.log(event)
+    //   //     console.log(pre)
+    //   //     console.log(self.camera)
+    //   //     if (event.movementY && !event.movementX) {
+    //   //       self.camera.rotation.x -= event.movementY / 500
+    //   //     } else if (!event.movementY && event.movementX) {
+    //   //       self.camera.rotation.y += event.movementX / 500
+    //   //     } else {
+    //   //       pre.x = event.clientX
+    //   //     }
+    //   //     pre.y = event.clientY
+    //   //   }
+    //   // }
+    // },
+    // cameraUpdate () {
+    //   this.cameraVariables.lat = Math.max(-85, Math.min(85, this.cameraVariables.lat))
+    //   this.cameraVariables.phi = THREE.Math.degToRad(90 - this.cameraVariables.lat)
+    //   this.cameraVariables.theta = THREE.Math.degToRad(this.cameraVariables.lon)
+    //   this.camera.position.x = this.cameraVariables.distance * Math.sin(this.cameraVariables.phi) * Math.cos(this
+    //     .cameraVariables.theta)
+    //   this.camera.position.y = this.cameraVariables.distance * Math.cos(this.cameraVariables.phi)
+    //   this.camera.position.z = this.cameraVariables.distance * Math.sin(this.cameraVariables.phi) * Math.sin(this
+    //     .cameraVariables.theta)
+    //   this.camera.lookAt(this.camera.target)
+    //   // 为后面的惯性对接
+    //   setTimeout(() => {
+
+    //   }, 1000)
     // }
   }
 }
@@ -405,11 +514,17 @@ export default {
 
     .vr-video {
       position: relative;
-      .video-wrapper{
+
+      .video-wrapper {
+        display: flex;
+        align-items: center;
         height: calc(100vw / 16 * 9);
       }
+
       #video {
+        width: 100%;
         height: 100%;
+
         &:hover {
           .control {
             display: block;
@@ -418,7 +533,6 @@ export default {
             animation-fill-mode: forwards;
           }
         }
-
       }
 
       .control-hidden {
@@ -510,7 +624,7 @@ export default {
             border-style: solid;
             border: 0.45em solid rgba(0, 0, 0, 0);
             border-top-color: rgb(10, 126, 161);
-            animation: fast 0.75s linear infinite;
+            animation: fast 0.75s linear;
             border-radius: 50%;
           }
 
@@ -633,7 +747,34 @@ export default {
             }
           }
         }
-
+        &-notice{
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%,-50%);
+          visibility:hidden;
+          opacity: 0;
+          padding: 0.5em 1em;
+          white-space: nowrap;
+          font-size: 1em;
+          color:white;
+          background-color: rgba(0, 0, 0, 0.4);
+          border-radius: 0.5em;
+          &-show{
+            visibility: visible;
+            opacity: 1;
+            animation: notice 2s;
+            animation-delay: 3s;
+            animation-fill-mode: forwards;
+          }
+          @keyframes notice {
+            100%{
+              visibility:hidden;
+              opacity: 0;
+            }
+        }
+        }
+        
         &-statistics {
           position: absolute;
           z-index: 1;
@@ -647,21 +788,35 @@ export default {
         }
       }
 
+      &:fullscreen {
+        .video-wrapper {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          // transform-origin: top left;
+          // transform: rotate(90deg) translate(-0vh, -100vw);
+        }
+      }
     }
 
-    .fullScreen-mobile {
-      .video-wrapper{
+    .full-screen-mobile {
+      .video-wrapper {
         position: absolute;
+        z-index: 99;
         top: 0;
         left: 0;
-        width: 100vw;
-        height: 100vh;
-        // transform-origin:top left;
-        // transform: rotate(90deg) translate(-0vh, -100vw);
+        width: 100vh;
+        height: 100vw;
+        transform-origin: top left;
+        transform: rotate(90deg) translate(-0vh, -100vw);
       }
-      #video {
 
-      }
+      // #video {
+      //   width: 100%;
+      //   height: calc(100vw / 16 * 9);
+      // }
     }
 
     .orientation {
