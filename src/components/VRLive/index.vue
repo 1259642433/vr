@@ -154,9 +154,9 @@ export default {
   mounted () {
     if (this.check()) {
       this.playVariables.type = this.option.source.type
+      this.videoContainer = document.getElementById('videoContainer')
       this.init()
     }
-    this.videoContainer = document.getElementById('videoContainer')
     // console.log(screen)
     // console.log(screen.orientation)
   },
@@ -339,7 +339,9 @@ export default {
         // this.videoContainer.classList.remove('full-screen-mobile')
       } else {
         this.fullScreen()
-        this.showNotice('为了更好的观看体验<br>请关闭屏幕锁定横屏观看该视频')
+        if (/Android|webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent)) {
+          this.showNotice('为了更好的观看体验<br>请关闭屏幕锁定横屏观看该视频')
+        }
         // 只在谷歌浏览器下生效
         // screen.orientation.lock('landscape-primary')
         // this.videoContainer.classList.add('full-screen-mobile')
@@ -506,7 +508,6 @@ export default {
     //   this.camera.lookAt(this.camera.target)
     //   // 为后面的惯性对接
     //   setTimeout(() => {
-
     //   }, 1000)
     // }
   }
@@ -517,11 +518,13 @@ export default {
 <style lang="scss" scoped>
     .vr-video {
       position: relative;
-
+      width: 100%;
+      height: 100%;
       .video-wrapper {
         display: flex;
         align-items: center;
-        height: calc(100vw / 16 * 9);
+        height: 100%;
+        // min-height: 300px;
       }
 
       #video {
