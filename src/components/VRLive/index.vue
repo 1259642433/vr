@@ -3,7 +3,7 @@
     <div class="video-wrapper">
       <div id="video" @mousemove="ControlVisible()">
       </div>
-      <div class="vr-statistics">
+      <div v-if="statistics" class="vr-statistics">
         <p>type：{{playVariables.type || '???'}}</p>
         <p>status：{{playVariables.status || '???'}}</p>
         <p>currentTime: {{playVariables.currentTime}}</p>
@@ -113,6 +113,7 @@ export default {
         progress: 0,
         // fullscreenStatu: false,
         notice: '',
+        statistics: false,
         error: {
           code: 0,
           msg: ''
@@ -153,6 +154,7 @@ export default {
   // },
   mounted () {
     if (this.check()) {
+      this.playVariables.statistics = this.option.statistics
       this.playVariables.type = this.option.source.type
       this.videoContainer = document.getElementById('videoContainer')
       this.init()

@@ -15,6 +15,7 @@ export default {
   data () {
     return {
       opt: {
+        statistics: false, // 统计信息
         source: {
         /*
           视频类型
@@ -22,14 +23,14 @@ export default {
           HLS
           FLV
         */
-          type: 'Normal',
+          type: 'FLV',
           /*
           测试地址
           https://www.wangwentehappy.tk/assets/video/1.mp4
           http://localhost:8000/wwt/.flv
           http://localhost:8000/wwt/.m3u8
           */
-          url: 'https://www.wangwentehappy.tk/assets/video/1.mp4'
+          url: 'http://localhost:8000/wwt/.flv'
         }
       }
     }
