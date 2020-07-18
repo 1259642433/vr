@@ -23,14 +23,14 @@ export default {
           HLS
           FLV
         */
-          type: 'FLV',
+          type: 'Normal',
           /*
           测试地址
           https://www.wangwentehappy.tk/assets/video/1.mp4
           http://localhost:8000/wwt/.flv
           http://localhost:8000/wwt/.m3u8
           */
-          url: 'http://localhost:8000/wwt/.flv'
+          url: 'https://www.wangwentehappy.tk/assets/video/1.mp4'
         }
       }
     }
