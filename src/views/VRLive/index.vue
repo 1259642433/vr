@@ -1,57 +1,59 @@
 <template>
   <div class="vrlive">
-    <div id="videoContainer" class="vr-video">
-      <div class="video-wrapper">
-        <div id="video" @mousemove="ControlVisible()">
-        </div>
-        <div class="vr-statistics">
-          <p>type：{{playVariables.type || '???'}}</p>
-          <p>status：{{playVariables.status || '???'}}</p>
-          <p>currentTime: {{playVariables.currentTime}}</p>
-          <p>totalTime: {{playVariables.totalTime}}</p>
-        </div>
-        <div class="vr-func">
-          <div v-if="playVariables.status == 'pause'&&!playVariables.playClick"
-            @click="player.play();playVariables.playClick=true" class="btns-play">
-            <i class="iconfont icon-icon_play"></i>
+    <div class="main">
+      <div id="videoContainer" class="vr-video">
+        <div class="video-wrapper">
+          <div id="video" @mousemove="ControlVisible()">
           </div>
-          <div v-else-if="playVariables.status == 'playing'&&!playVariables.playClick" @click="player.pause()"
-            class="btns-pause">
-            <i class="iconfont icon-ai07"></i>
+          <div class="vr-statistics">
+            <p>type：{{playVariables.type || '???'}}</p>
+            <p>status：{{playVariables.status || '???'}}</p>
+            <p>currentTime: {{playVariables.currentTime}}</p>
+            <p>totalTime: {{playVariables.totalTime}}</p>
           </div>
-        </div>
-        <div v-if="playVariables.status == 'loading'" class="vr-loading">
-          <div class="border"></div>
-          <div class="slow"></div>
-          <div class="fast"></div>
-        </div>
-        <div class="vr-bar" v-if="playVariables.playClick" id="control">
-          <div class="bg"></div>
-          <div class="btns">
-            <div v-if="playVariables.status === 'playing'" @click="player.pause()" class="btns-pause">
-              <i class="iconfont icon-ai07"></i>
-            </div>
-            <div v-else @click="player.play()" class="btns-play">
+          <div class="vr-func">
+            <div v-if="playVariables.status == 'pause'&&!playVariables.playClick"
+              @click="player.play();playVariables.playClick=true" class="btns-play">
               <i class="iconfont icon-icon_play"></i>
             </div>
-          </div>
-          <div v-if="playVariables.type == 'Normal'" class="progress-container">
-            <div @click="jumpTo($event)" class="progress-wrapper">
-              <div class="progress" id="progress-play"></div>
-            </div>
-            <div class="btn-wrapper">
-              <div class="btn" id="progress-btn"></div>
+            <div v-else-if="playVariables.status == 'playing'&&!playVariables.playClick" @click="player.pause()"
+              class="btns-pause">
+              <i class="iconfont icon-ai07"></i>
             </div>
           </div>
-          <div v-else class="type">
-            <span class="statu-circle"></span>
-            <span>{{playVariables.type}}</span>
+          <div v-if="playVariables.status == 'loading'" class="vr-loading">
+            <div class="border"></div>
+            <div class="slow"></div>
+            <div class="fast"></div>
           </div>
-          <div @click="changeFullscreenStatu()" class="fullscreen">
-            <i class="iconfont icon-quanping"></i>
+          <div class="vr-bar" v-if="playVariables.playClick" id="control">
+            <div class="bg"></div>
+            <div class="btns">
+              <div v-if="playVariables.status === 'playing'" @click="player.pause()" class="btns-pause">
+                <i class="iconfont icon-ai07"></i>
+              </div>
+              <div v-else @click="player.play()" class="btns-play">
+                <i class="iconfont icon-icon_play"></i>
+              </div>
+            </div>
+            <div v-if="playVariables.type == 'Normal'" class="progress-container">
+              <div @click="jumpTo($event)" class="progress-wrapper">
+                <div class="progress" id="progress-play"></div>
+              </div>
+              <div class="btn-wrapper">
+                <div class="btn" id="progress-btn"></div>
+              </div>
+            </div>
+            <div v-else class="type">
+              <span class="statu-circle"></span>
+              <span>{{playVariables.type}}</span>
+            </div>
+            <div @click="changeFullscreenStatu()" class="fullscreen">
+              <i class="iconfont icon-quanping"></i>
+            </div>
           </div>
-        </div>
-        <div class="vr-notice" id="vrNotice" v-html="playVariables.notice">
+          <div class="vr-notice" id="vrNotice" v-html="playVariables.notice">
+          </div>
         </div>
       </div>
     </div>
@@ -100,11 +102,11 @@ export default {
       videoContainer: '',
       playVariables: {
         /*
-                视频类型
-                Normal:加载中,
-                HLS:视频播放中,包括视频中间加载后继续播放
-                FLV:暂停或用户未点开始按钮 (http-flv,websocket-flv)
-              */
+          视频类型
+          Normal:加载中,
+          HLS:视频播放中,包括视频中间加载后继续播放
+          FLV:暂停或用户未点开始按钮 (http-flv,websocket-flv)
+        */
         /*
           测试地址
           http://localhost:8000/wwt/.flv
@@ -114,18 +116,18 @@ export default {
         type: 'Normal',
         source: '',
         /*
-                播放状态，与视频播放状态对应
-                loading:加载中,
-                playing:视频播放中,包括视频中间加载后继续播放
-                pause:暂停或用户未点开始按钮
-          */
+          播放状态，与视频播放状态对应
+          loading:加载中,
+          playing:视频播放中,包括视频中间加载后继续播放
+          pause:暂停或用户未点开始按钮
+        */
         status: 'pause',
         playClick: false,
         // 控件显示状态
         currentTime: 0,
         progress: 0,
         // fullscreenStatu: false,
-        notice:'',
+        notice: '',
         error: {
           code: 0,
           msg: ''
@@ -147,14 +149,14 @@ export default {
     }
   },
   computed: {
-    fullScreenStatu () {
-      return document.mozFullScreen || document.webkitIsFullScreen
+    isMobile () {
+      const flag = navigator.userAgent.match(
+        /(phone|pad|pod|iPhone|iPod|ios|iPad|Android|Mobile|BlackBerry|IEMobile|MQQBrowser|JUC|Fennec|wOSBrowser|BrowserNG|WebOS|Symbian|Windows Phone)/i
+      )
+      return flag
     }
   },
   watch: {
-    playVariables (val) {
-
-    },
     fullScreenStatu (val) {
       console.log(val)
       if (val) {
@@ -180,9 +182,9 @@ export default {
       this.initControls(container)
       this.render()
       // this.addMouseEvent(container)
-      // window.addEventListener('deviceorientation', function (event) {
-      //   this.deviceOrientationData = event
-      // }.bind(this), false)
+      window.addEventListener('deviceorientation', function (event) {
+        this.deviceOrientationData = event
+      }.bind(this), false)
       window.addEventListener('resize', function () {
         this.onWindowResize(container)
       }.bind(this))
@@ -191,8 +193,8 @@ export default {
       this.scene = new THREE.Scene()
     },
     initCamera (el) {
-      this.camera = new THREE.PerspectiveCamera(75, el.clientWidth / el.clientHeight, 1, 1100)
-      this.camera.position.set(1,0,0)
+      this.camera = new THREE.PerspectiveCamera(60, el.clientWidth / el.clientHeight, 1, 1100)
+      this.camera.position.set(1, 0, 0)
       // this.camera.target = new THREE.Vector3(0, 0, 0)
     },
     initRenderer (el) {
@@ -220,7 +222,11 @@ export default {
           this.playVariables.status = 'playing'
         }
       }.bind(this))
-      if (this.playVariables.type === 'normal') {
+      if (this.playVariables.type === 'Normal') {
+        // 若为普通全景视频,监听相关事件控制进度条
+        this.video.addEventListener('onloadedmetadata', function (event) {
+          this.playVariables.currentTime = Math.floor(this.player.currentTime)
+        }.bind(this))
         this.video.addEventListener('timeupdate', function (event) {
           this.playVariables.currentTime = Math.floor(this.player.currentTime)
           this.playVariables.totalTime = this.playVariables.totalTime ? this.playVariables.totalTime : Math.floor(
@@ -333,8 +339,6 @@ export default {
         // this.videoContainer.classList.remove('full-screen-mobile')
       } else {
         this.fullScreen()
-        this.playVariables.notice = '为了更好的观看体验<br>请关闭屏幕锁定横屏观看该视频'
-        this.showNotice()
         // 只在谷歌浏览器下生效
         // screen.orientation.lock('landscape-primary')
         // this.videoContainer.classList.add('full-screen-mobile')
@@ -366,16 +370,16 @@ export default {
         el.webkitCancelFullScreen()
       }
     },
-    showNotice(){
-      let notice = document.getElementById('vrNotice')
+    showNotice () {
+      const notice = document.getElementById('vrNotice')
       if (notice.classList.contains('vr-notice-show')) {
-          notice.classList.remove('vr-notice-show')
-          setTimeout(() => {
-            notice.classList.add('vr-notice-show')
-          }, 0)
-        } else {
+        notice.classList.remove('vr-notice-show')
+        setTimeout(() => {
           notice.classList.add('vr-notice-show')
-        }
+        }, 0)
+      } else {
+        notice.classList.add('vr-notice-show')
+      }
     },
     ControlVisible () {
       const control = document.getElementById('control')
@@ -389,9 +393,9 @@ export default {
           control.classList.add('control-hidden')
         }
       }
-    },
+    }
     // 有更好的选择 three轨道控制器
-    // abandoned 对接鼠标移动事件,剩余惯性尚需对接，使滑动体验更加流畅
+    // abandoned 对接鼠标移动事件,之后添加视角滑动惯性，使滑动体验更加流畅
     // addMouseEvent (el) {
     //   el.addEventListener('mousedown', onDocumentMouseDown.bind(this), false)
     //   el.addEventListener('mousemove', onDocumentMouseMove.bind(this), false)
@@ -510,15 +514,27 @@ export default {
 
 <style lang="scss" scoped>
   .vrlive {
+    padding-top: 200px;
     overflow-y: visible;
+    transition: padding .5s;
+
+    .main {
+      padding: 20px;
+      margin: 0 auto;
+      width: 60vw;
+      height: calc(60vw / 16 * 9);
+      background: rgb(134, 134, 134);
+      border-radius: 8px;
+    }
 
     .vr-video {
       position: relative;
+      height: 100%;
 
       .video-wrapper {
         display: flex;
         align-items: center;
-        height: calc(100vw / 16 * 9);
+        height: 100%;
       }
 
       #video {
@@ -624,7 +640,7 @@ export default {
             border-style: solid;
             border: 0.45em solid rgba(0, 0, 0, 0);
             border-top-color: rgb(10, 126, 161);
-            animation: fast 0.75s linear;
+            animation: fast 0.75s linear infinite;
             border-radius: 50%;
           }
 
@@ -723,6 +739,7 @@ export default {
                 height: 0.8em;
                 border-radius: 50%;
                 background-color: white;
+                transition: margin-left .5s;
               }
             }
           }
@@ -747,34 +764,37 @@ export default {
             }
           }
         }
-        &-notice{
+
+        &-notice {
           position: absolute;
           top: 50%;
           left: 50%;
-          transform: translate(-50%,-50%);
-          visibility:hidden;
+          transform: translate(-50%, -50%);
+          visibility: hidden;
           opacity: 0;
           padding: 0.5em 1em;
           white-space: nowrap;
           font-size: 1em;
-          color:white;
+          color: white;
           background-color: rgba(0, 0, 0, 0.4);
           border-radius: 0.5em;
-          &-show{
+
+          &-show {
             visibility: visible;
             opacity: 1;
             animation: notice 2s;
             animation-delay: 3s;
             animation-fill-mode: forwards;
           }
+
           @keyframes notice {
-            100%{
-              visibility:hidden;
+            100% {
+              visibility: hidden;
               opacity: 0;
             }
+          }
         }
-        }
-        
+
         &-statistics {
           position: absolute;
           z-index: 1;
@@ -853,6 +873,18 @@ export default {
       margin-top: 20px;
       width: 100%;
 
+    }
+  }
+
+  @media screen and (max-width:768px) {
+    .vrlive {
+      padding-top: 0;
+      .main {
+        padding: 0;
+        width: 100vw;
+        height: calc(100vw / 16 * 9);
+        border-radius: 0;
+      }
     }
   }
 
