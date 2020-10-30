@@ -56,26 +56,8 @@
           </div>
         </div>
       </div>
-    </div>
-    <div class="playType">
-      <button>普通视频</button>
-      <button>HLS</button>
-      <!-- <button>rtmp</button> -->
-      <button>FLV</button>
-    </div>
-    <div class="orientation">
-      <p>
-        陀螺仪数据:
-      </p>
-      <p>
-        alpha(z轴):{{deviceOrientationData.alpha||'手机查看参数'}}
-      </p>
-      <p>
-        beta(x轴):{{deviceOrientationData.beta||'手机查看参数'}}
-      </p>
-      <p>
-        gamma(y轴):{{deviceOrientationData.gamma||'手机查看参数'}}
-      </p>
+      <div class="vr-notice" id="vrNotice" v-html="playVariables.notice">
+      </div>
     </div>
   </div>
 </template>
@@ -83,11 +65,15 @@
 <script>
 import * as THREE from 'three'
 import threeOrbitControls from 'three-orbit-controls'
-// import { error } from 'three'
 const OrbitControls = threeOrbitControls(THREE)
 
 export default {
   name: 'VRLive',
+  props: {
+    option: {
+      default: Object
+    }
+  },
   data () {
     return {
       camera: null,
@@ -114,7 +100,6 @@ export default {
           https://www.wangwentehappy.tk/assets/video/1.mp4
        */
         type: 'Normal',
-        source: '',
         /*
           播放状态，与视频播放状态对应
           loading:加载中,
@@ -155,6 +140,8 @@ export default {
       )
       return flag
     }
+    // console.log(screen)
+    // console.log(screen.orientation)
   },
   watch: {
     fullScreenStatu (val) {
@@ -162,17 +149,9 @@ export default {
       if (val) {
         this.videoContainer.classList.add('fullScreen-mobile')
       } else {
-        this.videoContainer.classList.remove('fullScreen-mobile')
+        return true
       }
-    }
-  },
-  mounted () {
-    this.videoContainer = document.getElementById('videoContainer')
-    this.init()
-    console.log(screen)
-    console.log(screen.orientation)
-  },
-  methods: {
+    },
     init () {
       const container = document.getElementById('video')
       this.initScene()
@@ -237,15 +216,20 @@ export default {
         }.bind(this))
       }
       // 判断视频类型
-      if (this.playVariables.type === 'FLV') {
-        this.getFLV('http://localhost:8000/wwt/.flv', this.video)
-      } else if (this.playVariables.type === 'HLS') {
-        this.getHLS('http://ivi.bupt.edu.cn/hls/cctv3hd.m3u8', this.video)
-      } else if (this.playVariables.type === 'Normal') {
-        this.getNormalVideo('https://www.wangwentehappy.tk/assets/video/1.mp4', this.video)
-      } else {
-        this.playVariables.error.code = 1
-        this.playVariables.error.msg = '未知的视频类型'
+      switch (this.option.source.type) {
+        case 'FLV':
+          this.getFLV(this.option.source.url, this.video)
+          break
+        case 'HLS':
+          this.getHLS(this.option.source.url, this.video)
+          break
+        case 'Normal':
+          this.getNormalVideo(this.option.source.url, this.video)
+          break
+        default:
+          this.playVariables.error.code = 1
+          this.playVariables.error.msg = '未知的视频类型'
+          break
       }
     },
     initContent () {
@@ -278,7 +262,7 @@ export default {
     getNormalVideo (sourceURL, el) {
       const source = document.createElement('source')
       source.src = sourceURL
-      source.type = 'video/mp4'
+      // source.type = 'video/mp4'
       el.appendChild(source)
       this.player = el
     },
@@ -504,7 +488,6 @@ export default {
     //   this.camera.lookAt(this.camera.target)
     //   // 为后面的惯性对接
     //   setTimeout(() => {
-
     //   }, 1000)
     // }
   }
@@ -746,6 +729,7 @@ export default {
 
           .type {
             padding: 0 2em;
+            width: 100%;
             font-size: 0.95em;
             font-weight: 300;
             color: white;
@@ -767,6 +751,7 @@ export default {
 
         &-notice {
           position: absolute;
+          z-index: 99;
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
@@ -820,61 +805,19 @@ export default {
         }
       }
     }
-
-    .full-screen-mobile {
-      .video-wrapper {
-        position: absolute;
-        z-index: 99;
-        top: 0;
-        left: 0;
-        width: 100vh;
-        height: 100vw;
-        transform-origin: top left;
-        transform: rotate(90deg) translate(-0vh, -100vw);
-      }
-
-      // #video {
-      //   width: 100%;
-      //   height: calc(100vw / 16 * 9);
-      // }
-    }
-
-    .orientation {
-      padding: 0 20px;
-      font-size: 14px;
-      color: white;
-    }
-
-    .playType {
-      display: flex;
-      justify-content: center;
-      margin-top: 30px;
-      width: 100vw;
-
-      button {
-        margin-right: 20px;
-        padding: 10px 15px;
-        font-size: 15px;
-        color: white;
-        background-image: linear-gradient(135deg, #ABDCFF 10%, #0396FF 100%);
-        border-radius: 5px;
-        transition: all .3s;
-
-        &:hover {
-          transform: translateY(-2px);
-          background-image: linear-gradient(120deg, #a1c4fd 0%, #c2e9fb 100%);
-          box-shadow: 0 2px 5px #40bad5;
-        }
-      }
-    }
-
-    video {
-      display: block;
-      margin-top: 20px;
-      width: 100%;
-
-    }
   }
+
+    // .full-screen-mobile {
+    //   .video-wrapper {
+    //     position: absolute;
+    //     z-index: 99;
+    //     top: 0;
+    //     left: 0;
+    //     width: 100vh;
+    //     height: 100vw;
+    //     transform-origin: top left;
+    //     transform: rotate(90deg) translate(-0vh, -100vw);
+    //   }
 
   @media screen and (max-width:768px) {
     .vrlive {

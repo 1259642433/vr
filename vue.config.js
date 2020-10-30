@@ -7,7 +7,7 @@ module.exports = {
   devServer: {
     open: true,
     openPage: '',
-    // host: '',
+    host: '0.0.0.0',
     port: 8080,
     https: false,
     proxy: null, // 设置代理
@@ -17,5 +17,6 @@ module.exports = {
     config.resolve.alias
       .set('@', resolve('src'))
       .set('@a', resolve('src/assets'))
+      .set('@c', resolve('src/components'))
   }
 }
