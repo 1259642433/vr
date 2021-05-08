@@ -2,6 +2,7 @@
     <div class="vr-live">
       <p>{{opt.source.src}}</p>
       <div class="container">
+
         <vr-live :option="opt"></vr-live>
       </div>
     </div>
@@ -20,9 +21,9 @@ export default {
         source: {
           /*
             视频类型
-            Normal
-            HLS
-            FLV
+            normal
+            hls
+            flv
           */
           type: 'normal',
           /*
