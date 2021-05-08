@@ -13,7 +13,7 @@
     "core-js": "^3.12.0",
     "flv.js": "^1.5.0",
     "hls.js": "^0.13.2",
-    "three": "^0.116.1",
+    "three": "^0.125.0",
     "three-orbit-controls": "^82.1.0",
     "videojs-flash": "^2.2.1",
     "videojs-panorama": "^0.1.7",
