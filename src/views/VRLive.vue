@@ -1,5 +1,6 @@
 <template>
     <div class="vr-live">
+      <p>{{opt.source.src}}</p>
       <div class="container">
         <vr-live :option="opt"></vr-live>
       </div>
@@ -15,22 +16,23 @@ export default {
   data () {
     return {
       opt: {
-        statistics: false, // 统计信息
+        statistics: true, // 统计信息
         source: {
-        /*
-          视频类型
-          Normal
-          HLS
-          FLV
-        */
-          type: 'Normal',
+          /*
+            视频类型
+            Normal
+            HLS
+            FLV
+          */
+          type: 'normal',
           /*
           测试地址
           https://www.wangwentehappy.tk/assets/video/1.mp4
-          http://localhost:8000/wwt/.flv
-          http://localhost:8000/wwt/.m3u8
+          http://playertest.longtailvideo.com/adaptive/bipbop/gear4/prog_index.m3u8
+          http://localhost:9001/live/wwt.flv
+          http://localhost:9001/live/wwt/index.m3u8
           */
-          url: 'https://www.wangwentehappy.tk/assets/video/1.mp4'
+          url: 'https://www.ashenone.tk/public/video/1.mp4'
         }
       }
     }

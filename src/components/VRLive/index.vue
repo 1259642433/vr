@@ -3,12 +3,13 @@
     <div class="video-wrapper">
       <div id="video" @mousemove="ControlVisible()">
       </div>
-      <div v-if="statistics" class="vr-statistics">
+      <div v-if="playVariables.statistics" class="vr-statistics">
         <p>type：{{playVariables.type || '???'}}</p>
         <p>status：{{playVariables.status || '???'}}</p>
         <p>currentTime: {{playVariables.currentTime}}</p>
         <p>totalTime: {{playVariables.totalTime}}</p>
-        <p>
+        <span v-if="deviceOrientationData.isSupported">
+          <p>
           陀螺仪数据:
         </p>
         <p>
@@ -19,7 +20,7 @@
         </p>
         <p>
           gamma(y轴):{{deviceOrientationData.gamma||'手机查看参数'}}
-        </p>
+        </p></span>
       </div>
       <div class="vr-func">
         <div v-if="playVariables.status == 'pause'&&!playVariables.playClick"
@@ -46,7 +47,7 @@
             <i class="iconfont icon-icon_play"></i>
           </div>
         </div>
-        <div v-if="playVariables.type == 'Normal'" class="progress-container">
+        <div v-if="playVariables.type == 'normal'" class="progress-container">
           <div @click="jumpTo($event)" class="progress-wrapper">
             <div class="progress" id="progress-play"></div>
           </div>
@@ -183,9 +184,10 @@ export default {
       this.initControls(container)
       this.render()
       // this.addMouseEvent(container)
-      // window.addEventListener('deviceorientation', function (event) {
-      //   this.deviceOrientationData = event
-      // }.bind(this), false)
+      window.addEventListener('deviceorientation', function (event) {
+        this.deviceOrientationData.isSupported = true
+        this.deviceOrientationData = event
+      }.bind(this), false)
       window.addEventListener('resize', function () {
         this.onWindowResize(container)
       }.bind(this))
@@ -224,24 +226,33 @@ export default {
         }
       }.bind(this))
       if (this.playVariables.type === 'normal') {
-        this.video.addEventListener('timeupdate', function (event) {
+        this.video.ontimeupdate = function (event) {
           this.playVariables.currentTime = Math.floor(this.player.currentTime)
           this.playVariables.totalTime = this.playVariables.totalTime ? this.playVariables.totalTime : Math.floor(
             this.player.duration)
           this.playVariables.progress = this.playVariables.currentTime / this.playVariables.totalTime
           document.getElementById('progress-play').style.width = (this.playVariables.progress) * 100 + '%'
           document.getElementById('progress-btn').style.marginLeft = (this.playVariables.progress) * 100 + '%'
-        }.bind(this))
+        }.bind(this)
+        // addEventListener('timeupdate', function (event) {
+        //   console.log(event)
+        //   this.playVariables.currentTime = Math.floor(this.player.currentTime)
+        //   this.playVariables.totalTime = this.playVariables.totalTime ? this.playVariables.totalTime : Math.floor(
+        //     this.player.duration)
+        //   this.playVariables.progress = this.playVariables.currentTime / this.playVariables.totalTime
+        //   document.getElementById('progress-play').style.width = (this.playVariables.progress) * 100 + '%'
+        //   document.getElementById('progress-btn').style.marginLeft = (this.playVariables.progress) * 100 + '%'
+        // }.bind(this))
       }
       // 判断视频类型
       switch (this.option.source.type) {
-        case 'FLV':
+        case 'flv':
           this.getFLV(this.option.source.url, this.video)
           break
-        case 'HLS':
+        case 'hls':
           this.getHLS(this.option.source.url, this.video)
           break
-        case 'Normal':
+        case 'normal':
           this.getNormalVideo(this.option.source.url, this.video)
           break
         default:
@@ -294,14 +305,14 @@ export default {
           console.log('加载成功')
         })
         this.hls.on(Hls.Events.ERROR, (event, data) => {
-          console.log('加载失败')
+          throw new Error(data.response.code + ' ' + data.response.text)
         })
       }
       this.player = el
     },
     // abandoned 对接rtmp流
     // 非原生video标签。
-    // confuse object?如何渲染?
+    // confuse object?如何作为纹理渲染?
     // getRTMP (sourceURL, el) {
     //   el.id = 'rtmpVideo'
     //   console.log(el)
